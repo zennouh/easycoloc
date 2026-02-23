@@ -16,10 +16,8 @@ services:
   easycoloc_db:
     image: postgres:16
     container_name: easycoloc_users_db
-    environment:
-      - POSTGRES_USER=easycoloc
-      - POSTGRES_PASSWORD=easycoloc
-      - POSTGRES_DB=easycoloc_db_name
+    env_file:
+      - ./.env.docker
     ports:
       - "5432:5432"
     volumes:
