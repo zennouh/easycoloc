@@ -10,8 +10,7 @@ services:
       - .:/var/www/html 
     depends_on:
       - easycoloc_db
-    networks:
-      - momcare_network
+
 
   easycoloc_db:
     image: postgres:16
@@ -22,13 +21,10 @@ services:
       - "5432:5432"
     volumes:
       - easycoloc_db_data:/var/lib/postgresql/data
-    networks:
-      - easycoloc_network
 
 
-networks:
-  easycoloc_network:
-    driver: bridge
+
+
 
 volumes:
   easycoloc_db_data:
