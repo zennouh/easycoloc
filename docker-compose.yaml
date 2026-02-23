@@ -1,0 +1,36 @@
+services:
+  easycoloc:
+    build:
+      context: .
+      dockerfile: docker/dockerfile
+    container_name: easycoloc_app
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/var/www/html 
+    depends_on:
+      - easycoloc_db
+    networks:
+      - momcare_network
+
+  easycoloc_db:
+    image: postgres:16
+    container_name: easycoloc_users_db
+    environment:
+      - POSTGRES_USER=easycoloc
+      - POSTGRES_PASSWORD=easycoloc
+      - POSTGRES_DB=easycoloc_db_name
+    ports:
+      - "5432:5432"
+    volumes:
+      - easycoloc_db_data:/var/lib/postgresql/data
+    networks:
+      - easycoloc_network
+
+
+networks:
+  easycoloc_network:
+    driver: bridge
+
+volumes:
+  easycoloc_db_data:
