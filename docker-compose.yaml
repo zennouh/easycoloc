@@ -1,9 +1,12 @@
+
 services:
   easycoloc:
     build:
       context: .
       dockerfile: docker/dockerfile
     container_name: easycoloc_app
+    env_file:
+      - ./.env.docker
     ports:
       - "8000:8000"
     volumes:
