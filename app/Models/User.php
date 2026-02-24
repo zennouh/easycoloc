@@ -12,15 +12,15 @@ class User extends Authenticatable
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
         'name',
         'email',
+        'number',
+        'address',
         'password',
+        'reputation',
+        'is_admin',
+        'banned_at'
     ];
 
     /**
@@ -43,6 +43,27 @@ class User extends Authenticatable
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_admin' => 'boolean',
+            'banned_at' => 'datetime'
         ];
+    }
+    public function colocations()
+    {
+        return $this->belongsToMany(Colocation::class)
+            ->using(ColocationUser::class)
+            ->withPivot('role', 'joined_at', 'left_at')
+            ->withTimestamps();
+    }
+    public function expenses()
+    {
+        return $this->hasMany(Expense::class);
+    }
+    public function settlementsSent()
+    {
+        return $this->hasMany(Settlement::class, 'from_user_id');
+    }
+    public function settlementsReceived()
+    {
+        return $this->hasMany(Settlement::class, 'to_user_id');
     }
 }
