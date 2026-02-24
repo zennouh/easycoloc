@@ -6,7 +6,7 @@ services:
       dockerfile: docker/dockerfile
     container_name: easycoloc_app
     env_file:
-      - ./.env.docker
+      - ./.env
     ports:
       - "8000:8000"
     volumes:
@@ -18,8 +18,10 @@ services:
   easycoloc_db:
     image: postgres:16
     container_name: easycoloc_users_db
-    env_file:
-      - ./.env.docker
+    environment:
+      POSTGRES_DB: easycoloc_db_name
+      POSTGRES_USER: easycoloc
+      POSTGRES_PASSWORD: easycoloc
     ports:
       - "5432:5432"
     volumes:
