@@ -9,6 +9,7 @@ services:
       - ./.env
     ports:
       - "8000:8000"
+      - "5173:5173"
     volumes:
       - .:/var/www/html 
     depends_on:
