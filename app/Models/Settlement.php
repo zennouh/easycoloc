@@ -9,8 +9,8 @@ class Settlement extends Model
     protected $fillable = [
         'from_user_id',
         'to_user_id',
+        "expense_id",
         'amount',
-        'status',
         'paid_at'
     ];
 
