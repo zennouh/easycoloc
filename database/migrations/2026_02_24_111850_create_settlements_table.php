@@ -22,8 +22,9 @@ return new class extends Migration
                 ->constrained('users')
                 ->cascadeOnDelete();
 
+
+
             $table->decimal('amount', 10, 2);
-            $table->string('status')->default('pending');
             $table->timestamp('paid_at')->nullable();
 
             $table->timestamps();
