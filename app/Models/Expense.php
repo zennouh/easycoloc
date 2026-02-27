@@ -34,4 +34,9 @@ class Expense extends Model
     {
         return $this->belongsTo(Category::class);
     }
+
+    public function settlements()
+    {
+        return $this->hasMany(Settlement::class);
+    }
 }
