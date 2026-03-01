@@ -4,13 +4,14 @@ namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable;
+    use HasFactory, Notifiable, SoftDeletes;
 
     protected $fillable = [
         'name',
@@ -51,7 +52,7 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Colocation::class)
             ->using(ColocationUser::class)
-            ->withPivot('role', 'joined_at', 'left_at')->as('membership')
+            ->withPivot('role', 'joined_at', 'left_at', "deleted_at")->as('membership')
             ->withTimestamps();
     }
     public function expenses()

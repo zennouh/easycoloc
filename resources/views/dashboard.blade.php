@@ -32,14 +32,15 @@
 							<div class="p-2">
 								<div class="bg-green-50 text-green-700 rounded-md p-4">
 									<h2 class="text-sm font-medium text-green-700">Total Settlements</h2>
-									  <p class="text-2xl font-bold text-slate-800 mt-2">{{ $totalSettlements ?? '€ 800' }}</p>
-								
+									<p class="text-2xl font-bold text-slate-800 mt-2">{{ $totalSettlements ?? '€ 800' }}</p>
+
+								</div>
 							</div>
 						</div>
 					</div>
 				</div>
-			</div>
-		</main>
+			</main>
+		</div>
 	</div>
-</div></x-app-layout>
+</x-app-layout>
 

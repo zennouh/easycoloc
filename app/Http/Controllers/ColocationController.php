@@ -2,13 +2,12 @@
 
 namespace App\Http\Controllers;
 
+use App\Events\AddedToColocation;
 use App\Jobs\EmailJob;
 use Illuminate\Http\Request;
 use App\Models\Colocation;
 use App\Models\User;
-use Illuminate\Container\Attributes\Auth;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 
 class ColocationController extends Controller
@@ -28,7 +27,9 @@ class ColocationController extends Controller
             return back()->withErrors('noEmail', 'This Email has no user');
         }
 
-        if ($colocation->users()->where("user_id", $user->id)->exists()) {
+        if (
+            $colocation->users()->where("user_id", $user->id)->exists()
+        ) {
             return back()->withErrors('noEmail', 'This user is already in the colocation');
         }
 
@@ -38,7 +39,6 @@ class ColocationController extends Controller
             [
                 'colocation' => $colocation->id,
                 'user_id' => $user->id,
-                // 'email' => $request->email,
             ]
         );
 
@@ -60,6 +60,10 @@ class ColocationController extends Controller
         $colocationId = $request->query('colocation');
         $colocation = Colocation::findOrFail($colocationId);
 
+        $user = User::findOrFail($request->query('user_id'));
+
+        event(new AddedToColocation($user, $colocation));
+
         $colocation->users()->attach($request->query('user_id'), [
             'role' => 'member',
             'joined_at' => now(),
@@ -73,15 +77,52 @@ class ColocationController extends Controller
     {
         $user = auth()->user();
 
-
         $colocation = $user->colocations()
-            ->with(["expenses", "categories"])
-            ->withCount(['users', 'expenses', 'categories'])
+            ->wherePivotNull('deleted_at')
+            ->with(
+                [
+                    "expenses" => function ($query) use ($user) {
+                        $query->where("user_id", $user->id)
+                            ->with("settlements");
+                    },
+                    "categories",
+                    "users",
+                ],
+            )
             ->withSum("expenses as total", "amount")
+            ->withCount("expenses as colocation_expenses_count")
+            ->withCount("users as colocation_users_count")
             ->where("colocations.status", "active")
             ->orderBy('name')
             ->first();
 
+        $user_money_payed = 0;
+        $user_money_taken = 0;
+        $user_money_needed = 0;
+        if (!$colocation) {
+            return view("colocation", ["colocation" => null]);
+        }
+        foreach ($colocation->expenses as $expense) {
+            $expense->settlements_count = $expense->settlements()->count();
+
+            $user_money_payed += $expense->amount;
+
+            $amount = $expense->amount;
+
+            $users_should_pay = ceil($amount / $colocation->colocation_users_count);
+
+            $user_that_pay_count = $expense->settlements_count + 1;
+
+            $users_that_not_pay = $colocation->colocation_users_count - $user_that_pay_count;
+
+            $user_money_needed += $users_should_pay * $users_that_not_pay;
+
+            $user_money_taken += $expense->settlements->sum("amount");
+        }
+        $colocation->user_money_payed = $user_money_payed;
+        $colocation->user_money_taken = $user_money_taken;
+        $colocation->user_money_needed = $user_money_needed;
+        // dd($colocation->toArray());
 
         return view("colocation", compact("colocation"));
     }
@@ -91,7 +132,7 @@ class ColocationController extends Controller
     {
         $data = $request->validate([
             'name' => 'required|string|max:255',
-            'description' => 'nullable|string',
+            'address' => 'nullable|string',
             'status' => 'nullable|string|in:active,inactive',
         ]);
 
@@ -100,18 +141,36 @@ class ColocationController extends Controller
 
 
         $colocation->users()->attach(auth()->id(), [
-            'role' => 'ownern',
+            'role' => 'owner',
             'joined_at' => now(),
         ]);
 
         return back();
     }
 
-
-    public function show($id): JsonResponse
+    public function removeUser(Colocation $colocation, User $user)
     {
-        $colocation = Colocation::with(['users', 'categories', 'expenses'])->findOrFail($id);
+        $user->decrement('reputation', 1);
+        $colocation->users()->detach($user->id);
 
-        return response()->json($colocation);
+        return back()->with('success', 'User removed from colocation');
     }
+
+    public function leaveColocation(Colocation $colocation, User $user)
+    {
+        $user->increment('reputation', 1);
+        $colocation->users()->detach($user->id);
+
+        return to_route('colocations.index');
+    }
+
+    public function cancel(Colocation $colocation)
+    {
+        $colocation->update(['status' => 'inactive']);
+
+        return back()->with('success', 'Colocation cancelled successfully');
+    }
+
+
+ 
 }

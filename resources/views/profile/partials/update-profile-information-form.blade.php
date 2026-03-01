@@ -22,6 +22,11 @@
             <x-text-input id="name" name="name" type="text" class="mt-1 block w-full" :value="old('name', $user->name)" required autofocus autocomplete="name" />
             <x-input-error class="mt-2" :messages="$errors->get('name')" />
         </div>
+        <div>
+            <x-input-label for="address" :value="__('Address')" />
+            <x-text-input id="address" name="address" type="text" class="mt-1 block w-full" :value="old('address', $user->address)" required autofocus autocomplete="address" />
+            <x-input-error class="mt-2" :messages="$errors->get('address')" />
+        </div>
 
         <div>
             <x-input-label for="email" :value="__('Email')" />
@@ -46,19 +51,20 @@
                 </div>
             @endif
         </div>
+          <div>
+            <x-input-label for="number" :value="__('number')" />
+            <x-text-input id="number" name="number" type="text" class="mt-1 block w-full" :value="old('number', $user->number)" required autofocus autocomplete="number" />
+            <x-input-error class="mt-2" :messages="$errors->get('number')" />
+        </div>
+
+          <div>
+            <x-input-label for="repu" :value="__('Reputation')" />
+            <x-text-input disabled="true" id="repu" name="repu" type="text" class="mt-1 block w-full" :value="old('repu', $user->reputation)" required autofocus autocomplete="repu" />
+            <x-input-error class="mt-2" :messages="$errors->get('repu')" />
+        </div>
 
         <div class="flex items-center gap-4">
             <x-primary-button>{{ __('Save') }}</x-primary-button>
-
-            @if (session('status') === 'profile-updated')
-                <p
-                    x-data="{ show: true }"
-                    x-show="show"
-                    x-transition
-                    x-init="setTimeout(() => show = false, 2000)"
-                    class="text-sm text-gray-600"
-                >{{ __('Saved.') }}</p>
-            @endif
         </div>
     </form>
 </section>

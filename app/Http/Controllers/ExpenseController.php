@@ -17,17 +17,39 @@ class ExpenseController extends Controller
         $user = auth()->user();
 
 
+
+
+
+
         $colocation = $user->colocations()
-            ->with(["users", "expenses", "categories"])
+            ->with([
+                "users",
+                "expenses" => function ($query) use ($request) {
+                    $query = $query->whereYear('date', $request->integer('year', now()->year));
+                    if ($request->has('month') && $request->integer('month') !== 0) {
+                        $query->whereMonth('date', $request->integer('month'));
+                    }
+
+                    $query->orderBy('date', 'desc');
+                },
+                "categories"
+            ])
             ->withCount(['users', 'expenses', 'categories'])
             ->withSum("expenses as total", "amount")
             ->where("colocations.status", "active")
             ->orderBy('name')
             ->first();
 
+        $pickedYear = $request->integer('year', now()->year);
+        $pickedMonth = $request->integer('month', 0);
 
-        return view('expenses', compact('colocation'));
+
+        return view('expenses', compact('colocation', 'pickedYear', 'pickedMonth'));
     }
+
+
+
+
 
     /**
      * Store an expense
@@ -62,12 +84,12 @@ class ExpenseController extends Controller
             ->where("id", $expense->colocation_id)
             ->where("status", "active")
             ->first()->users;
-            $expense->users_count = $users->count();    
+        $expense->users_count = $users->count();
         foreach ($users as $user) {
             $user->price = ceil($expense->amount / $expense->users_count);
             $user->is_payer = $user->id === $expense->user_id;
             $user->pay = $expense->settlements()->where("from_user_id", $user->id)->exists();
-        }    
+        }
         $expense->users = $users->toArray();
         // dd($expense->toArray());
         return view('expensesShow', compact('expense'));
@@ -97,11 +119,11 @@ class ExpenseController extends Controller
     /**
      * Delete an expense
      */
-    public function destroy($id): JsonResponse
+    public function destroy($id)
     {
         $expense = Expense::findOrFail($id);
         $expense->delete();
 
-        return response()->json(null, 204);
+        return back()->with('success', 'Expense deleted successfully');
     }
 }
